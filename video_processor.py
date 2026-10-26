@@ -60,8 +60,15 @@ class VideoProcessor:
         output_path = Path(self.config.output_path)
         summary_path = Path(self.config.summary_path)
         input_path = Path(self.config.input_path)
-        if input_path.resolve() == output_path.resolve():
+        resolved_input = input_path.resolve()
+        resolved_output = output_path.resolve()
+        resolved_summary = summary_path.resolve()
+        if resolved_input == resolved_output:
             raise VideoProcessingError("Input and output video paths must be different.")
+        if resolved_output == resolved_summary:
+            raise VideoProcessingError("Output video and summary JSON paths must be different.")
+        if resolved_input == resolved_summary:
+            raise VideoProcessingError("Input video and summary JSON paths must be different.")
 
         try:
             output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -201,8 +208,10 @@ class VideoProcessor:
             return summary
         except VideoProcessingError:
             raise
-        except (OSError, ValueError, TypeError) as exc:
+        except (DetectionError, TrackingError) as exc:
             raise VideoProcessingError(str(exc)) from exc
+        except Exception as exc:
+            raise VideoProcessingError(f"Video processing failed: {exc}") from exc
         finally:
             # Cleanup operations are deliberately independent so one failure cannot skip another.
             if writer is not None:
