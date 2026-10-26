@@ -175,3 +175,19 @@ def test_line_outside_frame_is_rejected_and_capture_released(tmp_path, monkeypat
     with pytest.raises(VideoProcessingError, match="outside the frame height"):
         VideoProcessor(config, detector=object(), tracker=FakeTracker()).process()
     assert capture.released
+
+
+def test_output_and_summary_paths_must_be_distinct(tmp_path):
+    shared = tmp_path / "same.mp4"
+    config = AppConfig(tmp_path / "input.mp4", shared, shared, headless=True)
+    processor = VideoProcessor(config, detector=object(), tracker=FakeTracker())
+    with pytest.raises(VideoProcessingError, match="must be different"):
+        processor.process()
+
+
+def test_input_must_not_be_overwritten_by_summary(tmp_path):
+    shared = tmp_path / "input.mp4"
+    config = AppConfig(shared, tmp_path / "out.mp4", shared, headless=True)
+    processor = VideoProcessor(config, detector=object(), tracker=FakeTracker())
+    with pytest.raises(VideoProcessingError, match="Input video and summary JSON"):
+        processor.process()
