@@ -85,3 +85,15 @@ def test_bad_tracker_configuration_is_rejected():
 
 def test_detection_error_type_is_importable_for_pipeline_wrapping():
     assert issubclass(DetectionError, RuntimeError)
+
+
+def test_class_ids_are_resolved_from_model_names_not_hard_coded():
+    resolved = VehicleDetector._resolve_vehicle_classes(
+        {0: "person", 12: "car", 13: "motorcycle", 14: "bus", 15: "truck"}
+    )
+    assert resolved == {"car": 12, "motorcycle": 13, "bus": 14, "truck": 15}
+
+
+def test_model_missing_required_vehicle_class_is_rejected():
+    with pytest.raises(DetectionError, match="does not expose all required vehicle classes"):
+        VehicleDetector._resolve_vehicle_classes({0: "car", 1: "bus"})
