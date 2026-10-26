@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -59,15 +60,16 @@ class AppConfig:
             raise ValueError("Model identifier must not be empty.")
         if not str(self.tracker).strip():
             raise ValueError("Tracker configuration must not be empty.")
-        if not 0.0 <= float(self.confidence) <= 1.0:
+        confidence = float(self.confidence)
+        if not math.isfinite(confidence) or not 0.0 <= confidence <= 1.0:
             raise ValueError("Confidence must be between 0.0 and 1.0 inclusive.")
-        if self.line_y is not None and (isinstance(self.line_y, bool) or self.line_y < 0):
-            raise ValueError("Line Y must be a non-negative integer or None.")
-        if self.line_y is not None and not isinstance(self.line_y, int):
+        if self.line_y is not None and (
+            isinstance(self.line_y, bool) or not isinstance(self.line_y, int) or self.line_y < 0
+        ):
             raise ValueError("Line Y must be a non-negative integer or None.")
         if self.direction not in {"both", "positive", "negative"}:
             raise ValueError("Direction must be 'both', 'positive', or 'negative'.")
-        if self.fallback_fps <= 0:
-            raise ValueError("Fallback FPS must be greater than zero.")
-        if self.hysteresis_px < 0:
-            raise ValueError("Counting hysteresis must be non-negative.")
+        if not math.isfinite(float(self.fallback_fps)) or self.fallback_fps <= 0:
+            raise ValueError("Fallback FPS must be finite and greater than zero.")
+        if isinstance(self.hysteresis_px, bool) or not isinstance(self.hysteresis_px, int) or self.hysteresis_px < 0:
+            raise ValueError("Counting hysteresis must be a non-negative integer.")
